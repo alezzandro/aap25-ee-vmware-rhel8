@@ -71,6 +71,8 @@ The files available on the `playbooks` directory will be copied in the EE contai
 
 All the playbooks accept parameters so you can launch them without changing the Ansible code, plus you may also instruct OpenShift in to launching it with the correct parameters. You can start from the `pod` or `job` template overriding the container's default start command.
 
+<b>Please Note</b>: in the `playbooks` folder you will also find a playbook for deleting all the snapshots for the target Virtual Machine, this is a mandatory prerequisite for VMware, otherwise the disk mode change will fail.
+
 ### Usage Example
 You could launch the playbook for reconfiguring all the disks of virtual machine to mode `persistent` launching the following command from the running container:
 
@@ -78,3 +80,17 @@ You could launch the playbook for reconfiguring all the disks of virtual machine
 $ cd /runner/project
 $ ansible-playbook -e vcenter_hostname=10.10.10.10 -e vcenter_username=administrator@vsphere.local -e vcenter_password='MySecretPassword' -e vcenter_dc=MYVMWDC -e vm_name=vm-test-migration-1 playbook-reconfigure-all-diskmode-persistent.yaml
 ```
+
+## The Migration Toolkit Pre-Hook
+Alternatively if you have many VMs with independent disks, you may think about leveraging the pre hooks feature availble in the Migration Toolkit for Virtualization's Plan.
+
+You can follow the steps documented in this nice article: [Using migration hooks in migration toolkit for virtualization](https://www.redhat.com/en/blog/migration-hooks-with-migration-toolkit-for-virtualization) and then replacing the hook-runner image with a custom one.
+
+You can build the image by yourself with the `Dockerfile` you will find in the `hook-runner` directory or using the image that I've pushed on my Quay repository:
+```
+quay.io/alezzandro/hook-runner-vmware:latest
+```
+
+Then you can leverage the file `playbook-pre-hook.yaml` to execute the disk mode change for every virtual machines added to your Migration Plan in MTV.
+
+### WARNING: consider that the previous playbook will also delete any snapshot for the target Virtual Machines, this is a mandatory prerequisite for VMware, otherwise the disk mode change will fail.

@@ -1,0 +1,65 @@
+- name: Reconfigure all disks to persistent
+  hosts: localhost
+  gather_facts: false
+  vars:
+    vcenter_hostname: your.host.local
+    vcenter_username: administrator@vsphere.local
+    vcenter_password: Your_Super_Secret_P4ssw0rd
+    vcenter_dc: YOURDCNAME
+  tasks:
+    - name: Load Plan
+      include_vars:
+        file: plan.yml
+        name: plan
+    
+    - name: Load Workload
+      include_vars:
+        file: workload.yml
+        name: workload
+
+    - name: Delete all snapshots for virtual machine using name
+      community.vmware.vmware_guest_snapshot:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        datacenter: "{{ vcenter_dc }}"
+        folder: "/{{ vcenter_dc }}/vm/"
+        name: "{{ item.ref.name }}"
+        state: remove_all
+        validate_certs: false
+      delegate_to: localhost
+      loop: "{{ plan.vms }}"
+
+    - name: Gather disk info from VM
+      community.vmware.vmware_guest_disk_info:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        datacenter: "{{ vcenter_dc }}"
+        name: "{{ item.ref.name }}"
+        validate_certs: false
+      register: disk_info
+      loop: "{{ plan.vms }}"
+
+    - name: Filter the dict variable to build a list for the nested loop
+      ansible.builtin.set_fact:
+        disk_list: "{{ disk_list | default([]) + [{'name':item.item.ref.name,'disks':item.guest_disk_info | dict2items }] }}"
+      loop: "{{ disk_info.results }}"
+
+    - name: Set Disk to persistent
+      community.vmware.vmware_guest_disk:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        datacenter: "{{ vcenter_dc }}"
+        name: "{{ item.0.name }}"
+        validate_certs: false
+        disk:
+          - controller_number: "{{ item.1.value.controller_bus_number }}"
+            controller_type: "{{ item.1.value.controller_type }}"
+            unit_number: "{{ item.1.value.unit_number }}"
+            size_kb: "{{ item.1.value.capacity_in_kb }}"
+            disk_mode: "persistent"
+      with_subelements:
+        - "{{ disk_list }}"
+        - disks

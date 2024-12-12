@@ -1,0 +1,6 @@
+systemd-devel
+python3.11-devel
+gcc
+procps-ng
+vim
+nano

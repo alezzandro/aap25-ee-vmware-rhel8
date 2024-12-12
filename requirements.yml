@@ -1,0 +1,21 @@
+---
+collections:
+  - name: ansible.eda
+  - name: ansible.hub
+  - name: ansible.netcommon
+  - name: ansible.network
+  - name: ansible.posix
+  - name: ansible.scm
+  - name: ansible.security
+  - name: ansible.snmp
+  - name: ansible.utils
+  - name: ansible.windows
+  - name: ansible.yang
+  - name: kubernetes.core
+  - name: microsoft.ad
+  - name: redhat.openshift
+  - name: redhat.openshift_virtualization
+  - name: servicenow.itsm
+  - name: vmware.vmware
+  - name: vmware.vmware_rest
+  - name: https://github.com/alezzandro/community.vmware/releases/download/5.2.1-test-disk_mode/community-vmware-5.2.1.tar.gz

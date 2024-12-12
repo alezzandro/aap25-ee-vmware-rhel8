@@ -1,0 +1,23 @@
+---
+- name: VMware Change Disk Mode
+  hosts: localhost
+  tasks:
+  - name: Change disk mode for virtual machine using name
+    community.vmware.vmware_guest_disk:
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      datacenter: "{{ vcenter_dc }}"
+      name: "{{ vm_name }}"
+      validate_certs: false
+      disk:
+        - controller_number: "{{ disk_controller_number }}"
+          unit_number: "{{ disk_unit_number }}"
+          disk_mode: "{{ disk_mode }}"
+          size_kb: "{{ disk_size_kb }}"
+    delegate_to: localhost
+    register: disk_facts
+
+  - name: Print return information from the previous task
+    ansible.builtin.debug:
+      var: disk_facts

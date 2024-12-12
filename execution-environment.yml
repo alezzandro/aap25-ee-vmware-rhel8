@@ -1,0 +1,49 @@
+---
+version: 3
+
+build_arg_defaults:
+  ANSIBLE_GALAXY_CLI_COLLECTION_OPTS: '--pre'
+
+dependencies:
+  galaxy: requirements.yml
+  python:
+    - six
+    - psutil
+  system: bindep.txt
+
+images:
+  base_image:
+    name: registry.redhat.io/ansible-automation-platform-25/ee-minimal-rhel8:latest
+
+additional_build_files:
+    - src: playbooks/playbook-change-diskmode.yaml
+      dest: .
+    - src: playbooks/playbook-delete-all-snapshots.yaml
+      dest: .
+    - src: playbooks/playbook-gather-disk-info.yaml
+      dest: .
+    - src: playbooks/playbook-reconfigure-all-diskmode-persistent.yaml
+      dest: .
+
+additional_build_steps:
+  prepend_galaxy:
+    # Environment variables used for Galaxy client configurations
+    - ENV ANSIBLE_GALAXY_SERVER_LIST=automation_hub
+    - ENV ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_URL=https://console.redhat.com/api/automation-hub/
+    - ENV ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_AUTH_URL=https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token
+    # define a custom build arg env passthru - we still also have to pass
+    # `--build-arg ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_TOKEN` to get it to pick it up from the env
+    # Take yours token at https://console.redhat.com/ansible/automation-hub/token
+    - ARG ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_TOKEN=___YOUR___TOKEN___
+
+  prepend_builder:
+    - ENV PKGMGR_OPTS="--nodocs --setopt=install_weak_deps=0 --setopt=rhocp-4.16-for-rhel-8-x86_64-rpms.enabled=true"
+
+  prepend_final:
+    - ENV PKGMGR_OPTS="--nodocs --setopt=install_weak_deps=0 --setopt=rhocp-4.16-for-rhel-8-x86_64-rpms.enabled=true"
+
+  append_final:
+    - COPY --chmod=0777 _build/playbook-change-diskmode.yaml /runner/project
+    - COPY --chmod=0777 _build/playbook-delete-all-snapshots.yaml /runner/project
+    - COPY --chmod=0777 _build/playbook-gather-disk-info.yaml /runner/project
+    - COPY --chmod=0777 _build/playbook-reconfigure-all-diskmode-persistent.yaml /runner/project

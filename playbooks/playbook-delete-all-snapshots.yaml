@@ -1,0 +1,20 @@
+---
+- name: VMware Delete All Snapshosts for VM
+  hosts: local
+  tasks:
+  - name: Delete all snapshots for virtual machine using name
+    community.vmware.vmware_guest_snapshot:
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      datacenter: "{{ vcenter_dc }}"
+      folder: "/{{ vcenter_dc }}/vm/"
+      name: "{{ vm_name }}"
+      state: remove_all
+      validate_certs: false
+    delegate_to: localhost
+    register: snap_facts
+
+  - name: Print return information from the previous task
+    ansible.builtin.debug:
+      var: snap_facts

@@ -1,0 +1,17 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: job-aap25-ee-vmware-rhel8
+spec:
+  parallelism: 1    
+  completions: 1    
+  backoffLimit: 6   
+  template:         
+    metadata:
+      name: aap25-ee-vmware-rhel8
+    spec:
+      containers:
+      - name: ee-vmware-rhel8
+        image: quay.io/alezzandro/aap25-ee-vmware-rhel8:20241212
+        command: ["tail", "-f", "/dev/null"]
+      restartPolicy: OnFailure

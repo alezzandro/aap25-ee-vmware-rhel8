@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: aap25-ee-vmware-rhel8
+  labels:
+    purpose: vmware-troubleshoot
+  namespace: ansible-vmware-test
+spec:
+  restartPolicy: Never
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+      - name: ee-vmware-rhel8
+        image: quay.io/alezzandro/aap25-ee-vmware-rhel8:20241212
+        command: ["tail", "-f", "/dev/null"] 
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL

@@ -1,0 +1,31 @@
+---
+
+- name: Reconfigure all disks to persistent
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Gather disk info from VM
+      community.vmware.vmware_guest_disk_info:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        datacenter: "{{ vcenter_dc }}"
+        name: "{{ vm_name }}"
+        validate_certs: false
+      register: disk_info
+
+    - name: Set Disk to persistent
+      community.vmware.vmware_guest_disk:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        datacenter: "{{ vcenter_dc }}"
+        name: "{{ vm_name }}"
+        validate_certs: false
+        disk:
+          - controller_number: "{{ item.value.controller_bus_number }}"
+            controller_type: "{{ item.value.controller_type }}"
+            unit_number: "{{ item.value.unit_number }}"
+            size_kb: "{{ item.value.capacity_in_kb }}"
+            disk_mode: "persistent"
+      loop: "{{ disk_info.guest_disk_info | dict2items }}"
